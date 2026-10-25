@@ -13,7 +13,9 @@
     "build:hospital": "npm run build --workspace=apps/hospital",
     "build:pharmacy": "npm run build --workspace=apps/pharmacy",
     "build": "npm run build --workspaces",
-    "lint": "npm run lint --workspaces"
+    "lint": "npm run lint --workspaces",
+    "check:db:hospital": "npx tsx apps/hospital/check-db.ts",
+    "check:db:pharmacy": "npx tsx apps/pharmacy/check-db.ts"
   },
   "devDependencies": {}
 }
