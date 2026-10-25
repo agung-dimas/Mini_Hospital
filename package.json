@@ -9,7 +9,7 @@
   "scripts": {
     "dev:hospital": "npm run dev --workspace=apps/hospital",
     "dev:pharmacy": "npm run dev --workspace=apps/pharmacy",
-    "dev": "npm run dev --workspaces --parallel",
+    "dev": "concurrently -n hospital,pharmacy -c cyan,green \"npm run dev:hospital\" \"npm run dev:pharmacy\"",
     "build:hospital": "npm run build --workspace=apps/hospital",
     "build:pharmacy": "npm run build --workspace=apps/pharmacy",
     "build": "npm run build --workspaces",
@@ -17,5 +17,7 @@
     "check:db:hospital": "npx tsx apps/hospital/check-db.ts",
     "check:db:pharmacy": "npx tsx apps/pharmacy/check-db.ts"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "concurrently": "^10.0.6"
+  }
 }
