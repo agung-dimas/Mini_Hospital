@@ -1,0 +1,19 @@
+{
+  "name": "mini-hospital",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mini Hospital - Integrasi Sistem Informasi Pelayanan Pasien dan Farmasi",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:hospital": "npm run dev --workspace=apps/hospital",
+    "dev:pharmacy": "npm run dev --workspace=apps/pharmacy",
+    "dev": "npm run dev --workspaces --parallel",
+    "build:hospital": "npm run build --workspace=apps/hospital",
+    "build:pharmacy": "npm run build --workspace=apps/pharmacy",
+    "build": "npm run build --workspaces",
+    "lint": "npm run lint --workspaces"
+  },
+  "devDependencies": {}
+}

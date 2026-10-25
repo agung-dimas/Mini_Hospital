@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model ProfilPengguna {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  namaLengkap   String    @map("nama_lengkap")
+  peran         String    @map("peran")
+  dibuatPada    DateTime  @default(now()) @map("dibuat_pada") @db.Timestamptz
+  diperbaruiPada DateTime @updatedAt @map("diperbarui_pada") @db.Timestamptz
+  dokter        Dokter[]
+
+  @@map("profil_pengguna")
+}
+
+model Pasien {
+  id               String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nomorRekamMedis  String      @unique @map("nomor_rekam_medis")
+  namaLengkap      String      @map("nama_lengkap")
+  tanggalLahir     DateTime    @map("tanggal_lahir") @db.Date
+  jenisKelamin     String      @map("jenis_kelamin")
+  alamat           String?     @map("alamat")
+  dibuatPada       DateTime    @default(now()) @map("dibuat_pada") @db.Timestamptz
+  diperbaruiPada   DateTime    @updatedAt @map("diperbarui_pada") @db.Timestamptz
+  kunjungan        Kunjungan[]
+  resep            Resep[]
+
+  @@map("pasien")
+}
+
+model Dokter {
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  penggunaId     String?         @map("pengguna_id") @db.Uuid
+  namaLengkap    String          @map("nama_lengkap")
+  spesialisasi   String          @map("spesialisasi")
+  aktif          Boolean         @default(true) @map("aktif")
+  dibuatPada     DateTime        @default(now()) @map("dibuat_pada") @db.Timestamptz
+  profilPengguna ProfilPengguna? @relation(fields: [penggunaId], references: [id])
+  kunjungan      Kunjungan[]
+  resep          Resep[]
+
+  @@map("dokter")
+}
+
+model Kunjungan {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  pasienId       String        @map("pasien_id") @db.Uuid
+  dokterId       String        @map("dokter_id") @db.Uuid
+  waktuKunjungan DateTime      @default(now()) @map("waktu_kunjungan") @db.Timestamptz
+  status         String        @default("menunggu") @map("status")
+  dibuatPada     DateTime      @default(now()) @map("dibuat_pada") @db.Timestamptz
+  pasien         Pasien        @relation(fields: [pasienId], references: [id])
+  dokter         Dokter        @relation(fields: [dokterId], references: [id])
+  pemeriksaan    Pemeriksaan[]
+  resep          Resep[]
+
+  @@map("kunjungan")
+}
+
+model Pemeriksaan {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  kunjunganId String    @map("kunjungan_id") @db.Uuid
+  diagnosis   String    @map("diagnosis")
+  catatan     String?   @map("catatan")
+  dibuatOleh  String?   @map("dibuat_oleh") @db.Uuid
+  dibuatPada  DateTime  @default(now()) @map("dibuat_pada") @db.Timestamptz
+  kunjungan   Kunjungan @relation(fields: [kunjunganId], references: [id])
+
+  @@map("pemeriksaan")
+}
+
+model Resep {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  kunjunganId    String        @map("kunjungan_id") @db.Uuid
+  pasienId       String        @map("pasien_id") @db.Uuid
+  dokterId       String        @map("dokter_id") @db.Uuid
+  status         String        @default("draf") @map("status")
+  diterbitkanPada DateTime?    @map("diterbitkan_pada") @db.Timestamptz
+  dibuatPada     DateTime      @default(now()) @map("dibuat_pada") @db.Timestamptz
+  diperbaruiPada DateTime      @updatedAt @map("diperbarui_pada") @db.Timestamptz
+  kunjungan      Kunjungan     @relation(fields: [kunjunganId], references: [id])
+  pasien         Pasien        @relation(fields: [pasienId], references: [id])
+  dokter         Dokter        @relation(fields: [dokterId], references: [id])
+  detailResep    DetailResep[]
+
+  @@map("resep")
+}
+
+model DetailResep {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  resepId             String   @map("resep_id") @db.Uuid
+  obatId              String   @map("obat_id") @db.Uuid
+  namaObatSaatResep   String   @map("nama_obat_saat_resep")
+  jumlah              Int      @map("jumlah")
+  instruksiPenggunaan String   @map("instruksi_penggunaan")
+  dibuatPada          DateTime @default(now()) @map("dibuat_pada") @db.Timestamptz
+  resep               Resep    @relation(fields: [resepId], references: [id], onDelete: Cascade)
+
+  @@map("detail_resep")
+}
+
+model PeristiwaIntegrasi {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  jenisPeristiwa   String   @map("jenis_peristiwa")
+  referensiData    String?  @map("referensi_data") @db.Uuid
+  kunciIdempotensi String?  @unique @map("kunci_idempotensi")
+  statusPengiriman String   @default("tertunda") @map("status_pengiriman")
+  jumlahPercobaan  Int      @default(0) @map("jumlah_percobaan")
+  kesalahanTerakhir String? @map("kesalahan_terakhir")
+  dibuatPada       DateTime @default(now()) @map("dibuat_pada") @db.Timestamptz
+  diperbaruiPada   DateTime @updatedAt @map("diperbarui_pada") @db.Timestamptz
+
+  @@map("peristiwa_integrasi")
+}
+
+model LogAudit {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  penggunaId    String?  @map("pengguna_id") @db.Uuid
+  aksi          String   @map("aksi")
+  jenisData     String   @map("jenis_data")
+  referensiData String?  @map("referensi_data") @db.Uuid
+  dibuatPada    DateTime @default(now()) @map("dibuat_pada") @db.Timestamptz
+
+  @@map("log_audit")
+}
