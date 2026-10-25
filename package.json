@@ -7,11 +7,11 @@
     "apps/*"
   ],
   "scripts": {
-    "dev:hospital": "npm run dev --workspace=apps/hospital",
-    "dev:pharmacy": "npm run dev --workspace=apps/pharmacy",
+    "dev:hospital": "npm run dev --workspace=hospital",
+    "dev:pharmacy": "npm run dev --workspace=pharmacy",
     "dev": "concurrently -n hospital,pharmacy -c cyan,green \"npm run dev:hospital\" \"npm run dev:pharmacy\"",
-    "build:hospital": "npm run build --workspace=apps/hospital",
-    "build:pharmacy": "npm run build --workspace=apps/pharmacy",
+    "build:hospital": "npm run build --workspace=hospital",
+    "build:pharmacy": "npm run build --workspace=pharmacy",
     "build": "npm run build --workspaces",
     "lint": "npm run lint --workspaces",
     "check:db:hospital": "npx tsx apps/hospital/check-db.ts",

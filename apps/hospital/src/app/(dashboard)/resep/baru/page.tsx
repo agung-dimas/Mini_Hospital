@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useTransition, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { HospitalHeader } from '@/components/layout/header'
-import { FileText, Plus, Trash2, ArrowLeft, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
+import { FileText, Plus, Trash2, ArrowLeft, Loader2, CheckCircle2, AlertCircle, Lock, Stethoscope } from 'lucide-react'
+import { useRole } from '@/context/role-context'
 
 interface PasienOption {
   id: string
@@ -25,12 +26,20 @@ interface ItemObatForm {
   instruksi_penggunaan: string
 }
 
-export default function BuatResepBaruPage() {
+function BuatResepBaruContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const { role } = useRole()
+  const isDoctor = role === 'dokter'
+
+  const paramPasienId = searchParams.get('pasienId') || ''
+  const paramDokterId = searchParams.get('dokterId') || ''
+  const paramKunjunganId = searchParams.get('kunjunganId') || ''
+
   const [pasienList, setPasienList] = useState<PasienOption[]>([])
   const [dokterList, setDokterList] = useState<DokterOption[]>([])
-  const [pasienId, setPasienId] = useState('')
-  const [dokterId, setDokterId] = useState('')
+  const [pasienId, setPasienId] = useState(paramPasienId)
+  const [dokterId, setDokterId] = useState(paramDokterId)
   const [items, setItems] = useState<ItemObatForm[]>([
     {
       obat_id: 'a0000000-0000-0000-0000-000000000001',
@@ -58,8 +67,17 @@ export default function BuatResepBaruPage() {
         if (dataPasien.sukses) setPasienList(dataPasien.data)
         if (dataDokter.sukses) setDokterList(dataDokter.data)
 
-        if (dataPasien.data?.length > 0) setPasienId(dataPasien.data[0].id)
-        if (dataDokter.data?.length > 0) setDokterId(dataDokter.data[0].id)
+        if (paramPasienId) {
+          setPasienId(paramPasienId)
+        } else if (dataPasien.data?.length > 0) {
+          setPasienId(dataPasien.data[0].id)
+        }
+
+        if (paramDokterId) {
+          setDokterId(paramDokterId)
+        } else if (dataDokter.data?.length > 0) {
+          setDokterId(dataDokter.data[0].id)
+        }
       } catch (err) {
         console.error(err)
       } finally {
@@ -67,7 +85,7 @@ export default function BuatResepBaruPage() {
       }
     }
     loadData()
-  }, [])
+  }, [paramPasienId, paramDokterId])
 
   const handleTambahItem = () => {
     setItems((prev) => [
@@ -166,6 +184,16 @@ export default function BuatResepBaruPage() {
               Resep yang disimpan atomik akan dapat langsung ditarik oleh sistem Farmasi melalui REST API.
             </p>
           </div>
+
+          {!isDoctor && (
+            <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-start gap-3 text-amber-900 text-xs">
+              <Lock className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold">Kewenangan Terbatas (PRD 5.3):</span> Hanya Dokter yang memiliki kewenangan menerbitkan resep obat medis.
+                Saat ini Anda aktif sebagai peran <strong className="capitalize font-mono">[{role}]</strong>. Silakan beralih ke peran Dokter pada pemilih peran di pojok kanan atas untuk mengaktifkan tombol terbitkan resep.
+              </div>
+            </div>
+          )}
 
           {error && (
             <div className="bg-rose-50 border border-rose-200 p-4 rounded-xl flex items-center gap-3 text-rose-800 text-sm">
@@ -304,8 +332,8 @@ export default function BuatResepBaruPage() {
             </span>
             <button
               type="submit"
-              disabled={isPending}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors shadow-md shadow-blue-500/20 disabled:opacity-50"
+              disabled={isPending || !isDoctor}
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors shadow-md shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isPending ? (
                 <>
@@ -323,5 +351,13 @@ export default function BuatResepBaruPage() {
         </form>
       </main>
     </div>
+  )
+}
+
+export default function BuatResepBaruPage() {
+  return (
+    <Suspense fallback={<div className="p-12 text-center text-xs text-slate-500">Memuat formulir resep...</div>}>
+      <BuatResepBaruContent />
+    </Suspense>
   )
 }
