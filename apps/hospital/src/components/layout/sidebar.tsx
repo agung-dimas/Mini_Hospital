@@ -15,6 +15,7 @@ import {
   Stethoscope,
   ClipboardList,
   Lock,
+  LogOut,
 } from 'lucide-react'
 import { useRole } from '@/context/role-context'
 
@@ -85,7 +86,7 @@ const ALL_MENU_ITEMS: MenuItem[] = [
 
 export function HospitalSidebar() {
   const pathname = usePathname()
-  const { role, profile } = useRole()
+  const { role, profile, logout } = useRole()
 
   return (
     <aside className="w-64 bg-slate-900 text-slate-100 flex flex-col h-screen sticky top-0 shrink-0 border-r border-slate-800">
@@ -192,6 +193,15 @@ export function HospitalSidebar() {
             <ExternalLink className="h-3 w-3" />
           </a>
         </div>
+
+        <button
+          type="button"
+          onClick={logout}
+          className="w-full mt-2 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 border border-rose-900/40 font-semibold transition-all"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+          <span>Keluar (Logout)</span>
+        </button>
       </div>
     </aside>
   )

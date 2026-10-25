@@ -1,8 +1,10 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { UserRole, UserSession, SESSION_COOKIE_NAME } from '@/lib/auth'
 
-export type UserRole = 'administrator' | 'petugas_pendaftaran' | 'dokter'
+export type { UserRole } from '@/lib/auth'
 
 export interface RoleProfile {
   role: UserRole
@@ -52,7 +54,7 @@ export const ROLE_PROFILES: Record<UserRole, RoleProfile> = {
     role: 'petugas_pendaftaran',
     label: 'Petugas Pendaftaran',
     subLabel: 'Loket Pasien & Antrean Kunjungan',
-    userName: 'Siti Nurhaliza (Front Office)',
+    userName: 'Siti Nurhaliza (Loket)',
     avatarBadge: 'REG',
     colorTheme: {
       bg: 'bg-emerald-50',
@@ -102,29 +104,62 @@ export const ROLE_PROFILES: Record<UserRole, RoleProfile> = {
 
 interface RoleContextType {
   role: UserRole
+  user: UserSession | null
   profile: RoleProfile
-  setRole: (role: UserRole) => void
+  loading: boolean
+  logout: () => Promise<void>
   hasAccess: (path: string) => boolean
 }
 
 const RoleContext = createContext<RoleContextType | undefined>(undefined)
 
 export function RoleProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
   const [role, setRoleState] = useState<UserRole>('dokter')
+  const [user, setUser] = useState<UserSession | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const saved = localStorage.getItem('mini_hospital_role') as UserRole
-    if (saved && ROLE_PROFILES[saved]) {
-      setRoleState(saved)
+    async function checkAuthSession() {
+      try {
+        const res = await fetch('/api/v1/auth/me')
+        const json = await res.json()
+        if (json.sukses && json.data) {
+          setUser(json.data)
+          setRoleState(json.data.peran)
+        } else {
+          // Jika belum ada cookie sesi, periksa fallback localStorage atau arahkan ke login
+          const savedRole = localStorage.getItem('mini_hospital_role') as UserRole
+          if (savedRole && ROLE_PROFILES[savedRole]) {
+            setRoleState(savedRole)
+          }
+        }
+      } catch (err) {
+        console.error('Error checking auth session:', err)
+      } finally {
+        setLoading(false)
+      }
     }
+
+    checkAuthSession()
   }, [])
 
-  const setRole = (newRole: UserRole) => {
-    setRoleState(newRole)
-    localStorage.setItem('mini_hospital_role', newRole)
+  const logout = async () => {
+    try {
+      await fetch('/api/v1/auth/logout', { method: 'POST' })
+    } catch (e) {
+      console.error(e)
+    }
+    localStorage.removeItem('mini_hospital_role')
+    setUser(null)
+    router.push('/login')
+    router.refresh()
   }
 
-  const profile = ROLE_PROFILES[role]
+  const profile = {
+    ...ROLE_PROFILES[role],
+    userName: user?.namaLengkap || ROLE_PROFILES[role].userName,
+  }
 
   const hasAccess = (path: string) => {
     if (path === '/dashboard') return true
@@ -132,7 +167,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <RoleContext.Provider value={{ role, profile, setRole, hasAccess }}>
+    <RoleContext.Provider value={{ role, user, profile, loading, logout, hasAccess }}>
       {children}
     </RoleContext.Provider>
   )

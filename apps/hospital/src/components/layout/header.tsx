@@ -1,22 +1,23 @@
 'use client'
 
 import React, { useState } from 'react'
+import Link from 'next/link'
 import {
   Bell,
-  ChevronDown,
+  LogOut,
   Shield,
   UserCheck,
   Stethoscope,
-  Check,
   Info,
-  AlertCircle,
-  ExternalLink,
+  ChevronDown,
+  User,
+  KeyRound,
 } from 'lucide-react'
-import { useRole, ROLE_PROFILES, UserRole } from '@/context/role-context'
+import { useRole, UserRole } from '@/context/role-context'
 
 export function HospitalHeader({ title }: { title: string }) {
-  const { role, profile, setRole } = useRole()
-  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const { role, profile, logout } = useRole()
+  const [menuOpen, setMenuOpen] = useState(false)
   const [infoOpen, setInfoOpen] = useState(false)
 
   const roleIcons: Record<UserRole, React.ReactNode> = {
@@ -32,98 +33,77 @@ export function HospitalHeader({ title }: { title: string }) {
       </div>
 
       <div className="flex items-center gap-3">
-        {/* Role Switcher Selector */}
+        {/* User Profile & Role Info Button */}
         <div className="relative">
           <button
             type="button"
-            onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-white shadow-xs hover:bg-slate-50 transition-all text-left"
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="flex items-center gap-3 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-white shadow-xs hover:bg-slate-50 transition-all text-left"
           >
-            <div className={`h-7 w-7 rounded-lg ${profile.colorTheme.badge} text-white flex items-center justify-center font-bold text-xs shadow-xs`}>
+            <div className={`h-8 w-8 rounded-lg ${profile.colorTheme.badge} text-white flex items-center justify-center font-bold text-xs shadow-xs`}>
               {profile.avatarBadge}
             </div>
             <div className="hidden sm:block text-left">
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-bold text-slate-900 leading-tight">
-                  {profile.label}
+                  {profile.userName}
                 </span>
-                <span className="text-[10px] text-slate-400 font-normal">
-                  ({profile.userName})
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${profile.colorTheme.bg} ${profile.colorTheme.text} border ${profile.colorTheme.border}`}>
+                  {profile.label}
                 </span>
               </div>
               <span className="text-[10px] text-slate-500 block leading-none mt-0.5">
-                Ganti Peran Pengguna
+                {profile.subLabel}
               </span>
             </div>
-            <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${menuOpen ? 'rotate-180' : ''}`} />
           </button>
 
-          {/* Dropdown Menu Peran */}
-          {dropdownOpen && (
+          {/* User Account Menu Dropdown */}
+          {menuOpen && (
             <>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setDropdownOpen(false)}
-              />
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
-                <div className="px-4 py-2 border-b border-slate-100 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-bold text-slate-900">Pilih Peran Pengguna (PRD 5)</p>
-                    <p className="text-[11px] text-slate-500">Simulasi hak akses sistem rumah sakit</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDropdownOpen(false)
-                      setInfoOpen(true)
-                    }}
-                    className="p-1 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-blue-50"
-                    title="Lihat detail kewenangan"
-                  >
-                    <Info className="h-4 w-4" />
-                  </button>
+              <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+              <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                <div className="px-4 py-3 border-b border-slate-100">
+                  <p className="text-xs font-bold text-slate-900">{profile.userName}</p>
+                  <p className="text-[11px] text-blue-600 font-semibold">{profile.label} (PRD 5)</p>
+                  <p className="text-[10px] text-slate-400 mt-1">{profile.description}</p>
                 </div>
 
                 <div className="p-1.5 space-y-1">
-                  {(Object.keys(ROLE_PROFILES) as UserRole[]).map((rKey) => {
-                    const item = ROLE_PROFILES[rKey]
-                    const isSelected = role === rKey
-                    return (
-                      <button
-                        key={rKey}
-                        type="button"
-                        onClick={() => {
-                          setRole(rKey)
-                          setDropdownOpen(false)
-                        }}
-                        className={`w-full flex items-start gap-3 p-2.5 rounded-xl text-left transition-all ${
-                          isSelected
-                            ? `${item.colorTheme.bg} ${item.colorTheme.border} border shadow-xs`
-                            : 'hover:bg-slate-50 border border-transparent'
-                        }`}
-                      >
-                        <div className={`mt-0.5 h-7 w-7 rounded-lg ${item.colorTheme.badge} text-white flex items-center justify-center font-bold text-xs shrink-0`}>
-                          {item.avatarBadge}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-slate-900">{item.label}</span>
-                            {isSelected && <Check className="h-4 w-4 text-blue-600 shrink-0" />}
-                          </div>
-                          <p className="text-[11px] text-slate-500 truncate">{item.userName}</p>
-                          <p className="text-[10px] text-slate-400 mt-0.5">{item.subLabel}</p>
-                        </div>
-                      </button>
-                    )
-                  })}
-                </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false)
+                      setInfoOpen(true)
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors text-left"
+                  >
+                    <Info className="h-4 w-4 text-blue-600" />
+                    <span>Lihat Rincian Hak Akses (PRD 5)</span>
+                  </button>
 
-                <div className="px-3 pt-2 pb-1 border-t border-slate-100 mt-1">
-                  <div className="rounded-lg bg-amber-50 border border-amber-200/60 p-2 text-[10px] text-amber-800 flex items-start gap-1.5">
-                    <AlertCircle className="h-3.5 w-3.5 text-amber-600 shrink-0 mt-0.5" />
-                    <span>
-                      Menu navigasi & kewenangan tombol akan menyesuaikan otomatis sesuai aturan PRD 5.
-                    </span>
+                  <Link
+                    href="/login"
+                    onClick={() => setMenuOpen(false)}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-700 hover:bg-slate-50 font-medium transition-colors text-left"
+                  >
+                    <KeyRound className="h-4 w-4 text-purple-600" />
+                    <span>Ganti Akun / Peran Pengguna</span>
+                  </Link>
+
+                  <div className="pt-1 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenuOpen(false)
+                        logout()
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-rose-600 hover:bg-rose-50 font-semibold transition-colors text-left"
+                    >
+                      <LogOut className="h-4 w-4 text-rose-500" />
+                      <span>Keluar (Logout)</span>
+                    </button>
                   </div>
                 </div>
               </div>
