@@ -148,11 +148,10 @@ export default function DokterPage() {
 
         {message && (
           <div
-            className={`p-4 rounded-2xl text-xs font-semibold flex items-center gap-2.5 ${
-              message.type === 'success'
-                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                : 'bg-rose-50 text-rose-800 border border-rose-200'
-            }`}
+            className={`p-4 rounded-2xl text-xs font-semibold flex items-center gap-2.5 ${message.type === 'success'
+              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+              : 'bg-rose-50 text-rose-800 border border-rose-200'
+              }`}
           >
             {message.type === 'success' ? (
               <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
@@ -202,9 +201,8 @@ export default function DokterPage() {
                     </div>
                   </div>
                   <span
-                    className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold border ${
-                      dok.aktif ? 'bg-emerald-50 text-emerald-800 border-emerald-200/80' : 'bg-slate-100 text-slate-500 border-slate-200'
-                    }`}
+                    className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold border ${dok.aktif ? 'bg-emerald-50 text-emerald-800 border-emerald-200/80' : 'bg-slate-100 text-slate-500 border-slate-200'
+                      }`}
                   >
                     {dok.aktif ? 'Praktik Aktif' : 'Non-Aktif'}
                   </span>
@@ -233,11 +231,10 @@ export default function DokterPage() {
                         alert(`Data profil dokter: ${dok.namaLengkap}`)
                       }
                     }}
-                    className={`w-full py-2.5 text-center text-xs font-bold rounded-xl border transition-colors cursor-pointer ${
-                      isAdministrator
-                        ? 'border-slate-200 hover:bg-slate-50 text-slate-700 hover:border-slate-300'
-                        : 'border-slate-100 text-slate-400 cursor-not-allowed bg-slate-50/50'
-                    }`}
+                    className={`w-full py-2.5 text-center text-xs font-bold rounded-xl border transition-colors cursor-pointer ${isAdministrator
+                      ? 'border-slate-200 hover:bg-slate-50 text-slate-700 hover:border-slate-300'
+                      : 'border-slate-100 text-slate-400 cursor-not-allowed bg-slate-50/50'
+                      }`}
                   >
                     {isAdministrator ? 'Kelola Profil Dokter' : 'Lihat Detail'}
                   </button>
