@@ -12,10 +12,11 @@ import {
   PlusCircle,
   ExternalLink,
   Shield,
-  Stethoscope,
   ClipboardList,
-  Lock,
   LogOut,
+  KeyRound,
+  X,
+  Plus,
 } from 'lucide-react'
 import { useRole } from '@/context/role-context'
 
@@ -40,6 +41,13 @@ const ALL_MENU_ITEMS: MenuItem[] = [
     icon: Users,
     roles: ['administrator', 'petugas_pendaftaran'],
     badge: 'Pendaftaran',
+  },
+  {
+    href: '/pengguna',
+    label: 'Manajemen Akun',
+    icon: KeyRound,
+    roles: ['administrator'],
+    badge: 'Admin',
   },
   {
     href: '/dokter',
@@ -86,123 +94,160 @@ const ALL_MENU_ITEMS: MenuItem[] = [
 
 export function HospitalSidebar() {
   const pathname = usePathname()
-  const { role, profile, logout } = useRole()
+  const { role, profile, logout, mobileNavOpen, setMobileNavOpen } = useRole()
 
-  return (
-    <aside className="w-64 bg-slate-900 text-slate-100 flex flex-col h-screen sticky top-0 shrink-0 border-r border-slate-800">
-      {/* Brand Header */}
-      <div className="h-16 flex items-center px-6 gap-3 border-b border-slate-800">
-        <div className="h-9 w-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
-          <Activity className="h-5 w-5" />
-        </div>
-        <div>
-          <span className="font-bold text-base text-white tracking-tight">Mini Hospital</span>
-          <span className="block text-[10px] uppercase font-semibold tracking-wider text-blue-400">
-            Hospital System (3000)
-          </span>
-        </div>
-      </div>
+  const navContent = (isMobile = false) => (
+    <div className="flex flex-col h-full justify-between">
+      <div>
+        {/* Brand Header */}
+        <div className="h-18 flex items-center justify-between px-6 border-b border-white/10">
+          <Link href="/dashboard" className="flex items-center gap-3 group">
+            <div className="h-10 w-10 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-inner group-hover:scale-105 transition-transform">
+              <div className="relative flex items-center justify-center">
+                <Activity className="h-5 w-5 text-white" />
+                <Plus className="h-2.5 w-2.5 text-sky-200 absolute -top-1 -right-1" />
+              </div>
+            </div>
+            <div>
+              <span className="font-extrabold text-base text-white tracking-tight block leading-tight">
+                Mini Hospital
+              </span>
+              <span className="block text-[9px] uppercase font-bold tracking-wider text-sky-200">
+                Sistem Pelayanan RS
+              </span>
+            </div>
+          </Link>
 
-      {/* Active Role Indicator Card */}
-      <div className="p-3 mx-3 my-3 bg-slate-800/80 border border-slate-700/60 rounded-xl">
-        <div className="flex items-center gap-2">
-          <div className={`h-6 w-6 rounded-md ${profile.colorTheme.badge} text-white flex items-center justify-center font-bold text-[10px]`}>
-            {profile.avatarBadge}
+          {isMobile && (
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen(false)}
+              className="p-1.5 rounded-xl text-sky-200 hover:text-white hover:bg-white/10 transition-colors"
+              aria-label="Tutup navigasi"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+
+        {/* Active Role Indicator Card (Glassmorphism) */}
+        <div className="p-3 mx-4 my-3 bg-white/10 border border-white/15 backdrop-blur-md rounded-2xl">
+          <div className="flex items-center gap-2.5">
+            <div className={`h-7 w-7 rounded-xl ${profile.colorTheme.badge} text-white flex items-center justify-center font-bold text-[10px] shadow-xs`}>
+              {profile.avatarBadge}
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="text-xs font-bold text-white block truncate leading-tight">
+                {profile.label}
+              </span>
+              <span className="text-[10px] text-sky-100/80 block truncate mt-0.5">
+                {profile.userName}
+              </span>
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <span className="text-[11px] font-bold text-white block truncate">
-              {profile.label}
-            </span>
-            <span className="text-[9px] text-slate-400 block truncate">
-              {profile.userName}
-            </span>
+        </div>
+
+        {/* Navigation Links */}
+        <nav className="px-4 space-y-1.5 overflow-y-auto max-h-[calc(100vh-270px)]">
+          <div className="px-3 mb-2 text-[10px] font-bold tracking-wider text-sky-200/70 uppercase">
+            Menu Akses ({profile.label})
           </div>
-        </div>
-      </div>
 
-      {/* Navigation Links */}
-      <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto">
-        <div className="px-3 mb-2 text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
-          Menu Akses ({profile.label})
-        </div>
+          {ALL_MENU_ITEMS.filter((item) => item.roles.includes(role)).map((item) => {
+            const Icon = item.icon
+            const isActive = pathname === item.href
 
-        {ALL_MENU_ITEMS.map((item) => {
-          const Icon = item.icon
-          const isActive = pathname === item.href
-          const isAllowed = item.roles.includes(role)
-
-          if (!isAllowed) {
             return (
-              <div
+              <Link
                 key={item.href}
-                className="flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-medium text-slate-500/60 cursor-not-allowed group opacity-50"
-                title={`Fitur ini khusus untuk peran: ${item.roles.join(', ')} (PRD 5)`}
+                href={item.href}
+                onClick={() => {
+                  if (isMobile) setMobileNavOpen(false)
+                }}
+                className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
+                  isActive
+                    ? 'bg-white/20 text-white font-bold backdrop-blur-md shadow-xs border border-white/20'
+                    : 'text-sky-100/80 hover:bg-white/10 hover:text-white'
+                }`}
               >
                 <div className="flex items-center gap-3">
-                  <Icon className="h-4 w-4 text-slate-600" />
+                  <Icon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-sky-200/80'}`} />
                   <span>{item.label}</span>
                 </div>
-                <Lock className="h-3 w-3 text-slate-600" />
-              </div>
+                {item.badge && (
+                  <span
+                    className={`text-[9px] px-2 py-0.5 rounded-full font-semibold border ${
+                      isActive
+                        ? 'bg-white/30 text-white border-white/30'
+                        : 'bg-white/10 text-sky-200 border-white/15'
+                    }`}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+              </Link>
             )
-          }
+          })}
+        </nav>
+      </div>
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                isActive
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20 font-semibold'
-                  : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <Icon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
-                <span>{item.label}</span>
-              </div>
-              {item.badge && (
-                <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${
-                  isActive ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-400'
-                }`}>
-                  {item.badge}
-                </span>
-              )}
-            </Link>
-          )
-        })}
-      </nav>
-
-      {/* Integration Quick Link Footer */}
-      <div className="p-4 border-t border-slate-800 bg-slate-950/40">
-        <div className="bg-slate-800/60 rounded-xl p-3 border border-slate-700/50 space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-300 font-medium">
-            <span className="flex items-center gap-1.5">
+      {/* Integration Quick Link & Logout Footer */}
+      <div className="p-4 border-t border-white/10 bg-black/10 backdrop-blur-xs space-y-2">
+        <div className="bg-white/10 rounded-2xl p-3 border border-white/15 space-y-2 backdrop-blur-md">
+          <div className="flex items-center justify-between text-xs text-sky-100 font-medium">
+            <span className="flex items-center gap-1.5 text-xs">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
               Pharmacy App
             </span>
-            <span className="text-[10px] text-slate-400">Port 3001</span>
+            <span className="text-[10px] text-sky-200 font-mono">Port 3001</span>
           </div>
           <a
             href="http://localhost:3001"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between text-xs text-blue-400 hover:text-blue-300 font-medium transition-colors"
+            className="flex items-center justify-between text-xs text-sky-200 hover:text-white font-bold transition-colors"
           >
-            Buka Pharmacy
+            <span>Buka Pharmacy</span>
             <ExternalLink className="h-3 w-3" />
           </a>
         </div>
 
         <button
           type="button"
-          onClick={logout}
-          className="w-full mt-2 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 border border-rose-900/40 font-semibold transition-all"
+          onClick={() => {
+            if (isMobile) setMobileNavOpen(false)
+            logout()
+          }}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs text-rose-200 hover:text-white hover:bg-rose-500/20 border border-rose-300/20 font-bold transition-all cursor-pointer"
         >
           <LogOut className="h-3.5 w-3.5" />
           <span>Keluar (Logout)</span>
         </button>
       </div>
-    </aside>
+    </div>
+  )
+
+  return (
+    <>
+      {/* Desktop Persistent Sidebar (md+) */}
+      <aside className="hidden md:flex w-64 bg-gradient-to-b from-[#0c5f92] via-[#084c75] to-[#043353] text-white flex-col h-screen sticky top-0 shrink-0 border-r border-[#084c75]/50 shadow-lg">
+        {navContent(false)}
+      </aside>
+
+      {/* Mobile Drawer Slide-Over (< md) */}
+      {mobileNavOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Backdrop Overlay */}
+          <div
+            className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+            onClick={() => setMobileNavOpen(false)}
+          />
+          {/* Drawer Content */}
+          <aside className="fixed inset-y-0 left-0 w-72 bg-gradient-to-b from-[#0c5f92] via-[#084c75] to-[#043353] text-white shadow-2xl z-10 flex flex-col animate-in slide-in-from-left duration-200">
+            {navContent(true)}
+          </aside>
+        </div>
+      )}
+    </>
   )
 }

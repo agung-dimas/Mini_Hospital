@@ -1,0 +1,308 @@
+{
+  "info": {
+    "_postman_id": "d6ec1e82-3a56-4f95-b7ad-0c02a90d5b41",
+    "name": "Mini Hospital - Hospital & Pharmacy API",
+    "description": "Koleksi API untuk integrasi Mini Hospital dan Mini Pharmacy. Dibuat berdasarkan PRD MINI PROJECT HOSPITAL.pdf dan route API yang tersedia di repository. Import file ini ke Postman, pilih environment Mini Hospital Local, lalu jalankan request login sesuai service.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "hospital_url", "value": "http://localhost:3000/api/v1" },
+    { "key": "pharmacy_url", "value": "http://localhost:3001/api/v1" },
+    { "key": "hospital_email", "value": "dokter.budi@hospital.local" },
+    { "key": "hospital_password", "value": "dokter123" },
+    { "key": "pharmacy_email", "value": "apoteker@pharmacy.local" },
+    { "key": "pharmacy_password", "value": "apoteker123" },
+    { "key": "pasien_id", "value": "" },
+    { "key": "dokter_id", "value": "" },
+    { "key": "kunjungan_id", "value": "" },
+    { "key": "pemeriksaan_id", "value": "" },
+    { "key": "resep_id", "value": "" },
+    { "key": "obat_id", "value": "" },
+    { "key": "pesanan_farmasi_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Hospital Management Service",
+      "description": "Service A: pasien, dokter, kunjungan, pemeriksaan, resep, autentikasi, dan audit.",
+      "item": [
+        {
+          "name": "Authentication",
+          "item": [
+            {
+              "name": "Login Hospital",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{hospital_email}}\",\n  \"password\": \"{{hospital_password}}\"\n}"
+                },
+                "url": { "raw": "{{hospital_url}}/auth/login", "host": ["{{hospital_url}}"], "path": ["auth", "login"] },
+                "description": "Membuat session cookie Hospital. Cookie dikelola otomatis oleh Postman."
+              },
+              "event": [{
+                "listen": "test",
+                "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 200) { pm.environment.set('hospital_user_id', pm.response.json().data.id); }"] }
+              }]
+            },
+            {
+              "name": "Current Hospital Session",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": { "raw": "{{hospital_url}}/auth/me", "host": ["{{hospital_url}}"], "path": ["auth", "me"] }
+              }
+            },
+            {
+              "name": "Logout Hospital",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": { "raw": "{{hospital_url}}/auth/logout", "host": ["{{hospital_url}}"], "path": ["auth", "logout"] }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Master Data",
+          "item": [
+            {
+              "name": "List Pasien",
+              "request": { "method": "GET", "header": [], "url": { "raw": "{{hospital_url}}/pasien?cari=", "host": ["{{hospital_url}}"], "path": ["pasien"], "query": [{ "key": "cari", "value": "" }] } }
+            },
+            {
+              "name": "Create Pasien",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{\n  \"nomor_rekam_medis\": \"RM-2026-0001\",\n  \"nama_lengkap\": \"Nama Pasien\",\n  \"tanggal_lahir\": \"1990-01-15\",\n  \"jenis_kelamin\": \"laki-laki\",\n  \"nomor_telepon\": \"081234567890\",\n  \"alamat\": \"Alamat pasien\"\n}" },
+                "url": { "raw": "{{hospital_url}}/pasien", "host": ["{{hospital_url}}"], "path": ["pasien"] }
+              }
+            },
+            {
+              "name": "Get Pasien Detail and Visit History",
+              "request": { "method": "GET", "header": [], "url": { "raw": "{{hospital_url}}/pasien/{{pasien_id}}", "host": ["{{hospital_url}}"], "path": ["pasien", "{{pasien_id}}"] } }
+            },
+            {
+              "name": "Update Pasien",
+              "request": {
+                "method": "PATCH",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{\n  \"nama_lengkap\": \"Nama Pasien Diperbarui\",\n  \"tanggal_lahir\": \"1990-01-15\",\n  \"jenis_kelamin\": \"laki-laki\",\n  \"nomor_telepon\": \"081234567890\",\n  \"alamat\": \"Alamat baru\"\n}" },
+                "url": { "raw": "{{hospital_url}}/pasien/{{pasien_id}}", "host": ["{{hospital_url}}"], "path": ["pasien", "{{pasien_id}}"] }
+              }
+            },
+            {
+              "name": "List Dokter Aktif",
+              "request": { "method": "GET", "header": [], "url": { "raw": "{{hospital_url}}/dokter", "host": ["{{hospital_url}}"], "path": ["dokter"] } }
+            },
+            {
+              "name": "Create Dokter",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{\n  \"nama_lengkap\": \"dr. Nama Dokter\",\n  \"spesialisasi\": \"Dokter Umum\"\n}" },
+                "url": { "raw": "{{hospital_url}}/dokter", "host": ["{{hospital_url}}"], "path": ["dokter"] }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Visits and Examinations",
+          "item": [
+            {
+              "name": "List Kunjungan",
+              "request": { "method": "GET", "header": [], "url": { "raw": "{{hospital_url}}/kunjungan?status=", "host": ["{{hospital_url}}"], "path": ["kunjungan"], "query": [{ "key": "status", "value": "" }] } }
+            },
+            {
+              "name": "Create Kunjungan",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{\n  \"pasien_id\": \"{{pasien_id}}\",\n  \"dokter_id\": \"{{dokter_id}}\",\n  \"waktu_kunjungan\": \"2026-10-25T09:00:00.000Z\"\n}" },
+                "url": { "raw": "{{hospital_url}}/kunjungan", "host": ["{{hospital_url}}"], "path": ["kunjungan"] }
+              }
+            },
+            {
+              "name": "Update Kunjungan",
+              "request": {
+                "method": "PATCH",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{\n  \"id\": \"{{kunjungan_id}}\",\n  \"pasien_id\": \"{{pasien_id}}\",\n  \"dokter_id\": \"{{dokter_id}}\",\n  \"waktu_kunjungan\": \"2026-10-25T09:00:00.000Z\",\n  \"status\": \"menunggu\"\n}" },
+                "url": { "raw": "{{hospital_url}}/kunjungan", "host": ["{{hospital_url}}"], "path": ["kunjungan"] }
+              }
+            },
+            {
+              "name": "Create Pemeriksaan",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{\n  \"kunjungan_id\": \"{{kunjungan_id}}\",\n  \"diagnosis\": \"Diagnosis pasien\",\n  \"catatan\": \"Catatan medis dan tanda vital\",\n  \"dibuat_oleh\": \"{{dokter_id}}\"\n}" },
+                "url": { "raw": "{{hospital_url}}/pemeriksaan", "host": ["{{hospital_url}}"], "path": ["pemeriksaan"] }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prescriptions",
+          "item": [
+            {
+              "name": "List Resep",
+              "request": { "method": "GET", "header": [], "url": { "raw": "{{hospital_url}}/resep?status=", "host": ["{{hospital_url}}"], "path": ["resep"], "query": [{ "key": "status", "value": "" }] } }
+            },
+            {
+              "name": "Get Resep Detail for Pharmacy Integration",
+              "request": { "method": "GET", "header": [], "url": { "raw": "{{hospital_url}}/resep/{{resep_id}}", "host": ["{{hospital_url}}"], "path": ["resep", "{{resep_id}}"] }, "description": "Endpoint PRD: Pharmacy mengambil detail resep terbaru dari Hospital." }
+            },
+            {
+              "name": "Create Resep",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{\n  \"kunjungan_id\": \"{{kunjungan_id}}\",\n  \"pasien_id\": \"{{pasien_id}}\",\n  \"dokter_id\": \"{{dokter_id}}\",\n  \"item_obat\": [\n    {\n      \"obat_id\": \"{{obat_id}}\",\n      \"nama_obat_saat_resep\": \"Paracetamol 500 mg\",\n      \"jumlah\": 10,\n      \"instruksi_penggunaan\": \"3 kali sehari setelah makan\"\n    }\n  ]\n}" },
+                "url": { "raw": "{{hospital_url}}/resep", "host": ["{{hospital_url}}"], "path": ["resep"] }
+              }
+            },
+            {
+              "name": "Update Resep Status",
+              "request": {
+                "method": "PATCH",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{\n  \"status\": \"diserahkan\"\n}" },
+                "url": { "raw": "{{hospital_url}}/resep/{{resep_id}}/status", "host": ["{{hospital_url}}"], "path": ["resep", "{{resep_id}}", "status"] },
+                "description": "Endpoint PRD: Pharmacy memperbarui status resep di Hospital."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Hospital Utilities",
+          "item": [
+            {
+              "name": "List Obat from Hospital",
+              "request": { "method": "GET", "header": [], "url": { "raw": "{{hospital_url}}/obat", "host": ["{{hospital_url}}"], "path": ["obat"] } }
+            },
+            {
+              "name": "List Audit Log",
+              "request": { "method": "GET", "header": [], "url": { "raw": "{{hospital_url}}/log-audit", "host": ["{{hospital_url}}"], "path": ["log-audit"] } }
+            },
+            {
+              "name": "List Hospital Users",
+              "request": { "method": "GET", "header": [], "url": { "raw": "{{hospital_url}}/pengguna", "host": ["{{hospital_url}}"], "path": ["pengguna"] } }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pharmacy Management Service",
+      "description": "Service B: katalog obat, stok, pesanan resep, penyerahan obat, dan login Pharmacy.",
+      "item": [
+        {
+          "name": "Authentication",
+          "item": [
+            {
+              "name": "Login Pharmacy",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{pharmacy_email}}\",\n  \"password\": \"{{pharmacy_password}}\"\n}" },
+                "url": { "raw": "{{pharmacy_url}}/auth/login", "host": ["{{pharmacy_url}}"], "path": ["auth", "login"] }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Medicine and Stock",
+          "item": [
+            {
+              "name": "List Pharmacy Medicines",
+              "request": { "method": "GET", "header": [], "url": { "raw": "{{pharmacy_url}}/obat?cari=", "host": ["{{pharmacy_url}}"], "path": ["obat"], "query": [{ "key": "cari", "value": "" }] } }
+            },
+            {
+              "name": "Create Medicine",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{\n  \"kode_obat\": \"OBT-IBU-400\",\n  \"nama_obat\": \"Ibuprofen\",\n  \"bentuk_obat\": \"Tablet\",\n  \"kekuatan_obat\": \"400 mg\",\n  \"satuan\": \"Strip\",\n  \"stok_minimum\": 10\n}" },
+                "url": { "raw": "{{pharmacy_url}}/obat", "host": ["{{pharmacy_url}}"], "path": ["obat"] }
+              }
+            },
+            {
+              "name": "Get Medicine Stock",
+              "request": { "method": "GET", "header": [], "url": { "raw": "{{pharmacy_url}}/obat/{{obat_id}}/stok", "host": ["{{pharmacy_url}}"], "path": ["obat", "{{obat_id}}", "stok"] }, "description": "Endpoint PRD: Hospital atau client memeriksa stok obat di Pharmacy." }
+            },
+            {
+              "name": "Add Stock Movement",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{\n  \"obat_id\": \"{{obat_id}}\",\n  \"jenis_pergerakan\": \"penerimaan\",\n  \"perubahan_jumlah\": 50,\n  \"alasan\": \"Penerimaan stok gudang\"\n}" },
+                "url": { "raw": "{{pharmacy_url}}/pergerakan-stok", "host": ["{{pharmacy_url}}"], "path": ["pergerakan-stok"] }
+              }
+            },
+            {
+              "name": "Update Medicine",
+              "request": {
+                "method": "PATCH",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{\n  \"nama_obat\": \"Ibuprofen 400 mg\",\n  \"stok_minimum\": 15,\n  \"aktif\": true\n}" },
+                "url": { "raw": "{{pharmacy_url}}/obat/{{obat_id}}", "host": ["{{pharmacy_url}}"], "path": ["obat", "{{obat_id}}"] }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prescription Orders",
+          "item": [
+            {
+              "name": "List Prescription Orders",
+              "request": { "method": "GET", "header": [], "url": { "raw": "{{pharmacy_url}}/pesanan-resep", "host": ["{{pharmacy_url}}"], "path": ["pesanan-resep"] } }
+            },
+            {
+              "name": "Receive Prescription Order",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{\n  \"resep_rumah_sakit_id\": \"{{resep_id}}\",\n  \"pasien\": {\n    \"nama_lengkap\": \"Nama Pasien\",\n    \"nomor_rekam_medis\": \"RM-2026-0001\",\n    \"tanggal_lahir\": \"1990-01-15\",\n    \"jenis_kelamin\": \"laki-laki\"\n  },\n  \"dokter\": {\n    \"nama_lengkap\": \"dr. Nama Dokter\",\n    \"spesialisasi\": \"Dokter Umum\"\n  },\n  \"diagnosis\": \"Diagnosis pasien\",\n  \"catatan_klinis\": \"Catatan medis\",\n  \"diterbitkan_pada\": \"2026-10-25T09:00:00.000Z\",\n  \"items\": [\n    {\n      \"detail_resep_rumah_sakit_id\": \"{{pemeriksaan_id}}\",\n      \"obat_id\": \"{{obat_id}}\",\n      \"nama_obat_saat_pesanan\": \"Paracetamol 500 mg\",\n      \"jumlah_diminta\": 10\n    }\n  ]\n}" },
+                "url": { "raw": "{{pharmacy_url}}/pesanan-resep", "host": ["{{pharmacy_url}}"], "path": ["pesanan-resep"] }
+              }
+            },
+            {
+              "name": "Get Prescription Order Detail",
+              "request": { "method": "GET", "header": [], "url": { "raw": "{{pharmacy_url}}/pesanan-resep/{{pesanan_farmasi_id}}", "host": ["{{pharmacy_url}}"], "path": ["pesanan-resep", "{{pesanan_farmasi_id}}"] } }
+            },
+            {
+              "name": "Dispense Prescription Order",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Idempotency-Key", "value": "dispense-{{pesanan_farmasi_id}}-001" }],
+                "body": { "mode": "raw", "raw": "{\n  \"diserahkan_oleh\": \"{{pharmacy_user_id}}\",\n  \"items\": [\n    {\n      \"obat_id\": \"{{obat_id}}\",\n      \"jumlah_diserahkan\": 10\n    }\n  ]\n}" },
+                "url": { "raw": "{{pharmacy_url}}/pesanan-resep/{{pesanan_farmasi_id}}/penyerahan", "host": ["{{pharmacy_url}}"], "path": ["pesanan-resep", "{{pesanan_farmasi_id}}", "penyerahan"] },
+                "description": "Memvalidasi stok, mencatat detail penyerahan, mengurangi stok secara atomik, lalu menyinkronkan status ke Hospital."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pharmacy Users",
+          "item": [
+            {
+              "name": "List Pharmacy Users",
+              "request": { "method": "GET", "header": [], "url": { "raw": "{{pharmacy_url}}/pengguna", "host": ["{{pharmacy_url}}"], "path": ["pengguna"] } }
+            },
+            {
+              "name": "Create Pharmacy User",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": { "mode": "raw", "raw": "{\n  \"nama_lengkap\": \"Nama Petugas Farmasi\",\n  \"peran\": \"apoteker\"\n}" },
+                "url": { "raw": "{{pharmacy_url}}/pengguna", "host": ["{{pharmacy_url}}"], "path": ["pengguna"] }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

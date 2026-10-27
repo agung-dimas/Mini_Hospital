@@ -1,6 +1,29 @@
-import { Bell, User } from 'lucide-react'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Bell, LogOut, User } from 'lucide-react'
 
 export function PharmacyHeader({ title }: { title: string }) {
+  const router = useRouter()
+  const [user, setUser] = useState<{ namaLengkap?: string; peran?: string } | null>(null)
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('mini_pharmacy_user')
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser))
+      } catch {
+        localStorage.removeItem('mini_pharmacy_user')
+      }
+    }
+  }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem('mini_pharmacy_user')
+    router.push('/login')
+  }
+
   return (
     <header className="h-16 border-b border-slate-200 bg-white/80 backdrop-blur px-8 flex items-center justify-between sticky top-0 z-40">
       <div>
@@ -20,10 +43,19 @@ export function PharmacyHeader({ title }: { title: string }) {
             <User className="h-5 w-5" />
           </div>
           <div className="hidden sm:block text-left">
-            <span className="block text-sm font-semibold text-slate-900 leading-tight">apt. Rina Marlina</span>
-            <span className="block text-xs text-slate-500">Apoteker Penanggung Jawab</span>
+            <span className="block text-sm font-semibold text-slate-900 leading-tight">{user?.namaLengkap || 'Petugas Pharmacy'}</span>
+            <span className="block text-xs text-slate-500">{user?.peran === 'pengelola_farmasi' ? 'Pengelola Farmasi' : 'Apoteker'}</span>
           </div>
         </div>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-slate-200 px-3 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-rose-700 focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+          aria-label="Keluar dari Pharmacy"
+        >
+          <LogOut className="h-4 w-4" />
+          <span className="hidden sm:inline">Keluar</span>
+        </button>
       </div>
     </header>
   )

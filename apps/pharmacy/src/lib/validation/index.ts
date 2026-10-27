@@ -10,7 +10,7 @@ export const obatSchema = z.object({
 })
 
 export const pergerakanStokSchema = z.object({
-  obat_id: z.string().uuid('ID obat tidak valid'),
+  obat_id: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, 'ID obat tidak valid'),
   jenis_pergerakan: z.enum(['penerimaan', 'penyerahan', 'penyesuaian']),
   perubahan_jumlah: z.number().int(),
   referensi_transaksi: z.string().uuid().optional(),

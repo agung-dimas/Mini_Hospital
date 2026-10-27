@@ -2,14 +2,20 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { resepSchema } from '@/lib/validation'
 import { jsonSuccess, jsonError } from '@/lib/response'
+import { kirimResepKeFarmasi } from '@/lib/integrations/pharmacy'
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
+    const dokterId = searchParams.get('dokterId')
+
+    const where: Record<string, any> = {}
+    if (status) where.status = status
+    if (dokterId) where.dokterId = dokterId
 
     const daftarResep = await prisma.resep.findMany({
-      where: status ? { status } : undefined,
+      where,
       include: {
         pasien: true,
         dokter: true,
@@ -60,19 +66,49 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      // Catat log integrasi pengiriman resep
-      await tx.peristiwaIntegrasi.create({
-        data: {
-          jenisPeristiwa: 'terbitkan_resep',
-          referensiData: resep.id,
-          statusPengiriman: 'tertunda',
-        },
-      })
-
       return resep
     })
 
-    return jsonSuccess(resepBaru, 'Resep berhasil diterbitkan oleh dokter', 201)
+    const kunjunganDenganPemeriksaan = await prisma.kunjungan.findUnique({
+      where: { id: resepBaru.kunjunganId },
+      include: {
+        pemeriksaan: {
+          orderBy: { dibuatPada: 'desc' },
+          take: 1,
+        },
+      },
+    })
+
+    // Kirim ke Farmasi di luar transaksi agar resep tetap tersimpan walau Farmasi mati
+    let statusPengiriman = 'gagal'
+    let kesalahanTerakhir: string | null = null
+    try {
+      const hasil = await kirimResepKeFarmasi({
+        ...resepBaru,
+        kunjungan: { pemeriksaan: kunjunganDenganPemeriksaan?.pemeriksaan || [] },
+      })
+      if (hasil.ok) statusPengiriman = 'terkirim'
+      else kesalahanTerakhir = hasil.json?.pesan || `HTTP ${hasil.status}`
+    } catch (err) {
+      kesalahanTerakhir = err instanceof Error ? err.message : 'Farmasi tidak merespons'
+    }
+
+    await prisma.peristiwaIntegrasi.create({
+      data: {
+        jenisPeristiwa: 'terbitkan_resep',
+        referensiData: resepBaru.id,
+        kunciIdempotensi: `resep-${resepBaru.id}`,
+        statusPengiriman,
+        jumlahPercobaan: 1,
+        kesalahanTerakhir,
+      },
+    })
+
+    const pesan =
+      statusPengiriman === 'terkirim'
+        ? 'Resep diterbitkan dan sudah masuk antrean Farmasi'
+        : `Resep tersimpan, tetapi gagal dikirim ke Farmasi: ${kesalahanTerakhir}`
+    return jsonSuccess({ ...resepBaru, statusPengiriman }, pesan, 201)
   } catch (error) {
     console.error('Error POST /api/v1/resep:', error)
     return jsonError('Gagal menerbitkan resep', 500)

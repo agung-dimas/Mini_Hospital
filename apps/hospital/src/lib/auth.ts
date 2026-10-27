@@ -8,6 +8,7 @@ export interface UserSession {
   email: string
   spesialisasi?: string
   fotoAvatar?: string
+  dokterId?: string
 }
 
 export const DEMO_USERS: Record<string, UserSession & { kataSandi: string }> = {

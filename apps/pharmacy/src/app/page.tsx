@@ -37,13 +37,13 @@ export default function Home() {
       <main className="flex-1 max-w-7xl mx-auto px-6 py-12 w-full space-y-12">
         <div className="space-y-4 max-w-3xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
-            Enterprise Application Integration (EAI)
+            Sistem Informasi Farmasi Terpadu
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
             Sistem Informasi Pengelolaan Resep & Farmasi
           </h1>
           <p className="text-lg text-slate-600 leading-relaxed">
-            Aplikasi pengelolaan persediaan obat, verifikasi antrean resep masuk dari Rumah Sakit, validasi ketersediaan stok fisik, serta pemrosesan penyerahan obat yang terintegrasi secara atomik.
+            Aplikasi pengelolaan persediaan obat, verifikasi antrean resep masuk dari Rumah Sakit, validasi ketersediaan stok fisik, serta pemrosesan penyerahan obat yang aman dan akurat.
           </p>
         </div>
 
@@ -124,7 +124,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500">
-        Mini Pharmacy — Enterprise Application Integration System &copy; 2026
+        Mini Pharmacy (Sistem Pengelolaan Farmasi) &copy; 2026
       </footer>
     </div>
   )

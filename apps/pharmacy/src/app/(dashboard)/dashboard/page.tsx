@@ -162,7 +162,7 @@ export default async function PharmacyDashboardPage() {
                   <div key={p.id} className="py-3.5 flex items-center justify-between">
                     <div>
                       <p className="font-semibold text-sm text-slate-900">
-                        Resep RS: <span className="font-mono text-emerald-700">{p.resepRumahSakitId.slice(0, 8)}...</span>
+                        Resep RS: <span className="font-mono text-emerald-700 break-all">{p.resepRumahSakitId}</span>
                       </p>
                       <p className="text-xs text-slate-500">
                         {p.detailPesananResep.length} macam obat &bull; Diterima:{' '}

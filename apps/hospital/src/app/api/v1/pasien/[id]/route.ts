@@ -54,12 +54,31 @@ export async function PATCH(
       namaLengkap?: string
       tanggalLahir?: Date
       jenisKelamin?: string
+      nomorTelepon?: string | null
       alamat?: string
     } = {}
 
-    if (body.nama_lengkap) dataUpdate.namaLengkap = body.nama_lengkap
-    if (body.tanggal_lahir) dataUpdate.tanggalLahir = new Date(body.tanggal_lahir)
-    if (body.jenis_kelamin) dataUpdate.jenisKelamin = body.jenis_kelamin
+    if (typeof body.nama_lengkap === 'string' && body.nama_lengkap.trim()) {
+      dataUpdate.namaLengkap = body.nama_lengkap.trim()
+    }
+    if (body.tanggal_lahir) {
+      const tanggalLahir = new Date(body.tanggal_lahir)
+      if (Number.isNaN(tanggalLahir.getTime())) {
+        return jsonError('Tanggal lahir tidak valid', 422)
+      }
+      dataUpdate.tanggalLahir = tanggalLahir
+    }
+    if (body.jenis_kelamin) {
+      if (!['laki-laki', 'perempuan'].includes(body.jenis_kelamin)) {
+        return jsonError('Jenis kelamin tidak valid', 422)
+      }
+      dataUpdate.jenisKelamin = body.jenis_kelamin
+    }
+    if (body.nomor_telepon !== undefined) {
+      dataUpdate.nomorTelepon = typeof body.nomor_telepon === 'string'
+        ? body.nomor_telepon.trim() || null
+        : null
+    }
     if (body.alamat !== undefined) dataUpdate.alamat = body.alamat
 
     const updated = await prisma.pasien.update({

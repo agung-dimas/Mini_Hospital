@@ -14,6 +14,14 @@ export async function GET(
       include: {
         pasien: true,
         dokter: true,
+        kunjungan: {
+          include: {
+            pemeriksaan: {
+              orderBy: { dibuatPada: 'desc' },
+              take: 1,
+            },
+          },
+        },
         detailResep: true,
       },
     })

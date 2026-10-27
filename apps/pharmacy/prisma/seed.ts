@@ -8,6 +8,8 @@ async function main() {
   // 1. Profil Pengguna
   const apoteker = await prisma.profilPengguna.create({
     data: {
+      email: 'apoteker@pharmacy.local',
+      kataSandi: 'apoteker123',
       namaLengkap: 'apt. Rina Marlina, S.Farm',
       peran: 'apoteker',
     },
@@ -15,6 +17,8 @@ async function main() {
 
   const pengelola = await prisma.profilPengguna.create({
     data: {
+      email: 'pengelola@pharmacy.local',
+      kataSandi: 'pengelola123',
       namaLengkap: 'Bambang Irawan',
       peran: 'pengelola_farmasi',
     },

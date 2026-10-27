@@ -9,12 +9,14 @@ datasource db {
 }
 
 model ProfilPengguna {
-  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  namaLengkap   String    @map("nama_lengkap")
-  peran         String    @map("peran")
-  dibuatPada    DateTime  @default(now()) @map("dibuat_pada") @db.Timestamptz
-  diperbaruiPada DateTime @updatedAt @map("diperbarui_pada") @db.Timestamptz
-  dokter        Dokter[]
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email          String?   @unique @map("email")
+  kataSandi      String    @default("password123") @map("kata_sandi")
+  namaLengkap    String    @map("nama_lengkap")
+  peran          String    @map("peran")
+  dibuatPada     DateTime  @default(now()) @map("dibuat_pada") @db.Timestamptz
+  diperbaruiPada DateTime  @updatedAt @map("diperbarui_pada") @db.Timestamptz
+  dokter         Dokter[]
 
   @@map("profil_pengguna")
 }
@@ -25,6 +27,7 @@ model Pasien {
   namaLengkap      String      @map("nama_lengkap")
   tanggalLahir     DateTime    @map("tanggal_lahir") @db.Date
   jenisKelamin     String      @map("jenis_kelamin")
+  nomorTelepon     String?     @map("nomor_telepon")
   alamat           String?     @map("alamat")
   dibuatPada       DateTime    @default(now()) @map("dibuat_pada") @db.Timestamptz
   diperbaruiPada   DateTime    @updatedAt @map("diperbarui_pada") @db.Timestamptz

@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { jsonSuccess, jsonError } from '@/lib/response'
+import { getHospitalResep } from '@/lib/integrations/hospital'
 
 export async function GET(
   _request: NextRequest,
@@ -45,10 +46,32 @@ export async function GET(
       }
     })
 
+    let dataHospital: Awaited<ReturnType<typeof getHospitalResep>> | null = null
+    try {
+      dataHospital = await getHospitalResep(pesanan.resepRumahSakitId)
+    } catch (error) {
+      console.warn(`Gagal mengambil detail resep ${pesanan.resepRumahSakitId} dari Hospital:`, error)
+    }
+
+    const pemeriksaan = dataHospital?.kunjungan?.pemeriksaan?.[0]
+
     return jsonSuccess(
       {
         id: pesanan.id,
         resep_rumah_sakit_id: pesanan.resepRumahSakitId,
+        pasien: {
+          nama_lengkap: dataHospital?.pasien?.namaLengkap ?? pesanan.namaPasien,
+          nomor_rekam_medis: dataHospital?.pasien?.nomorRekamMedis ?? pesanan.nomorRekamMedis,
+          tanggal_lahir: dataHospital?.pasien?.tanggalLahir ?? pesanan.tanggalLahirPasien,
+          jenis_kelamin: dataHospital?.pasien?.jenisKelamin ?? pesanan.jenisKelaminPasien,
+        },
+        dokter: {
+          nama_lengkap: dataHospital?.dokter?.namaLengkap ?? pesanan.namaDokter,
+          spesialisasi: dataHospital?.dokter?.spesialisasi ?? pesanan.spesialisasiDokter,
+        },
+        diagnosis: pemeriksaan?.diagnosis ?? pesanan.diagnosis,
+        catatan_klinis: pemeriksaan?.catatan ?? pesanan.catatanKlinis,
+        diterbitkan_pada: dataHospital?.diterbitkanPada ?? pesanan.diterbitkanPada,
         status: pesanan.status,
         diterima_pada: pesanan.diterimaPada,
         items: itemsDenganStok,

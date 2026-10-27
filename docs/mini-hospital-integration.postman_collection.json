@@ -1,0 +1,288 @@
+{
+  "info": {
+    "_postman_id": "b3a15c2f-9b8e-45f2-a6df-4bf16d789a7e",
+    "name": "Mini Hospital - Simulasi Integrasi REST API",
+    "description": "Simulasi pertukaran data antara Hospital dan Pharmacy. Jalankan request sesuai urutan folder: Hospital membuat resep, Hospital mengirim data pasien dan obat ke Pharmacy secara otomatis, Pharmacy memeriksa stok, Pharmacy menyerahkan obat, lalu status resep dikirim kembali ke Hospital. Angka stok tetap berasal dari Pharmacy, bukan dikirim oleh Hospital.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "hospital_url", "value": "http://localhost:3000/api/v1" },
+    { "key": "pharmacy_url", "value": "http://localhost:3001/api/v1" },
+    { "key": "pasien_id", "value": "" },
+    { "key": "dokter_id", "value": "" },
+    { "key": "kunjungan_id", "value": "" },
+    { "key": "resep_id", "value": "" },
+    { "key": "obat_id", "value": "" },
+    { "key": "pesanan_farmasi_id", "value": "" },
+    { "key": "pharmacy_user_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "00 - Persiapan Data",
+      "description": "Isi pasien_id, dokter_id, kunjungan_id, obat_id, dan pharmacy_user_id sebelum menjalankan simulasi. Data dapat diambil dari koleksi API lengkap.",
+      "item": [
+        {
+          "name": "Cek Detail Obat dan Stok Pharmacy",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{pharmacy_url}}/obat/{{obat_id}}/stok",
+              "host": ["{{pharmacy_url}}"],
+              "path": ["obat", "{{obat_id}}", "stok"]
+            },
+            "description": "Memastikan obat ada dan melihat stok yang dimiliki Pharmacy sebelum resep dibuat."
+          }
+        },
+        {
+          "name": "Tambah Stok untuk Simulasi (Opsional)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"obat_id\": \"{{obat_id}}\",\n  \"jenis_pergerakan\": \"penerimaan\",\n  \"perubahan_jumlah\": 50,\n  \"alasan\": \"Stok awal simulasi integrasi\"\n}"
+            },
+            "url": {
+              "raw": "{{pharmacy_url}}/pergerakan-stok",
+              "host": ["{{pharmacy_url}}"],
+              "path": ["pergerakan-stok"]
+            },
+            "description": "Jalankan jika stok obat belum mencukupi. Ini hanya menambah stok Pharmacy, bukan bagian dari pengiriman resep Hospital."
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 - Hospital Membuat Resep",
+      "description": "Hospital membuat resep menggunakan pasien, dokter, kunjungan, dan obat. Setelah tersimpan, endpoint Hospital mengirim resep ke Pharmacy secara otomatis.",
+      "item": [
+        {
+          "name": "Buat Resep di Hospital dan Kirim Otomatis ke Pharmacy",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kunjungan_id\": \"{{kunjungan_id}}\",\n  \"pasien_id\": \"{{pasien_id}}\",\n  \"dokter_id\": \"{{dokter_id}}\",\n  \"item_obat\": [\n    {\n      \"obat_id\": \"{{obat_id}}\",\n      \"nama_obat_saat_resep\": \"Paracetamol 500 mg\",\n      \"jumlah\": 10,\n      \"instruksi_penggunaan\": \"3 kali sehari setelah makan\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{hospital_url}}/resep",
+              "host": ["{{hospital_url}}"],
+              "path": ["resep"]
+            },
+            "description": "Hospital menyimpan resep lalu memanggil POST Pharmacy /pesanan-resep. Data pasien, dokter, diagnosis, catatan klinis, dan item obat dikirim dalam proses integrasi."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  const resepId = body.data?.id || body.data?.resep?.id;",
+                  "  if (resepId) pm.environment.set('resep_id', resepId);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Hospital Mengambil Detail Resep",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{hospital_url}}/resep/{{resep_id}}",
+              "host": ["{{hospital_url}}"],
+              "path": ["resep", "{{resep_id}}"]
+            },
+            "description": "Memverifikasi data resep yang disimpan Hospital dan data klinis yang akan digunakan Pharmacy."
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Hospital Mengirim Data ke Pharmacy",
+      "description": "Folder ini menunjukkan payload pertukaran yang sebenarnya. Dalam alur aplikasi, request ini dipanggil otomatis oleh Hospital saat membuat resep. Jangan jalankan request manual jika request pada folder 01 berhasil, karena resep akan diterima dua kali.",
+      "item": [
+        {
+          "name": "Hospital Mengirim Pasien, Dokter, Diagnosis, Catatan, dan Obat",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "resep-{{resep_id}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resep_rumah_sakit_id\": \"{{resep_id}}\",\n  \"pasien\": {\n    \"nama_lengkap\": \"Nama Pasien dari Hospital\",\n    \"nomor_rekam_medis\": \"RM-2026-0001\",\n    \"tanggal_lahir\": \"1990-01-15\",\n    \"jenis_kelamin\": \"laki-laki\"\n  },\n  \"dokter\": {\n    \"nama_lengkap\": \"dr. Nama Dokter\",\n    \"spesialisasi\": \"Dokter Umum\"\n  },\n  \"diagnosis\": \"Diagnosis dari pemeriksaan Hospital\",\n  \"catatan_klinis\": \"Catatan medis dari pemeriksaan Hospital\",\n  \"diterbitkan_pada\": \"2026-10-26T09:00:00.000Z\",\n  \"items\": [\n    {\n      \"detail_resep_rumah_sakit_id\": \"ID_DETAIL_RESEP_HOSPITAL\",\n      \"obat_id\": \"{{obat_id}}\",\n      \"nama_obat_saat_pesanan\": \"Paracetamol 500 mg\",\n      \"jumlah_diminta\": 10\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{pharmacy_url}}/pesanan-resep",
+              "host": ["{{pharmacy_url}}"],
+              "path": ["pesanan-resep"]
+            },
+            "description": "Request manual untuk demonstrasi payload integrasi. Jika folder 01 sudah berhasil, Pharmacy sudah menerima payload ini dan request ini akan menghasilkan 409."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  const pesananId = body.data?.id;",
+                  "  if (pesananId) pm.environment.set('pesanan_farmasi_id', pesananId);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pharmacy Menemukan ID Pesanan dari ID Resep",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{pharmacy_url}}/pesanan-resep",
+              "host": ["{{pharmacy_url}}"],
+              "path": ["pesanan-resep"]
+            },
+            "description": "Jalankan setelah folder 01 berhasil. Request ini mengambil pesanan Pharmacy, lalu test script menyimpan id pesanan yang resepRumahSakitId-nya sama dengan resep_id."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  const orders = body.data || [];",
+                  "  const order = orders.find((item) => item.resepRumahSakitId === pm.environment.get('resep_id'));",
+                  "  if (order?.id) pm.environment.set('pesanan_farmasi_id', order.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pharmacy Menampilkan Detail Pesanan",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{pharmacy_url}}/pesanan-resep/{{pesanan_farmasi_id}}",
+              "host": ["{{pharmacy_url}}"],
+              "path": ["pesanan-resep", "{{pesanan_farmasi_id}}"]
+            },
+            "description": "Memverifikasi bahwa Pharmacy menerima ID resep Hospital, identitas pasien, dokter, diagnosis, catatan, dan item obat."
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Pharmacy Memeriksa Stok",
+      "description": "Stok adalah sumber data Pharmacy. Hospital hanya mengirim obat dan jumlah yang diresepkan, bukan stok saat ini.",
+      "item": [
+        {
+          "name": "Pharmacy Memeriksa Stok Obat",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{pharmacy_url}}/obat/{{obat_id}}/stok",
+              "host": ["{{pharmacy_url}}"],
+              "path": ["obat", "{{obat_id}}", "stok"]
+            },
+            "description": "Pharmacy menghitung stok dari seluruh mutasi stok dan menentukan apakah jumlah obat mencukupi."
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Pharmacy Menyerahkan Obat",
+      "description": "Pharmacy memotong stok secara atomik, membuat catatan penyerahan, lalu memanggil endpoint status Hospital.",
+      "item": [
+        {
+          "name": "Pharmacy Menyerahkan Obat dan Sinkronkan Status",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "penyerahan-{{pesanan_farmasi_id}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"diserahkan_oleh\": \"{{pharmacy_user_id}}\",\n  \"items\": [\n    {\n      \"obat_id\": \"{{obat_id}}\",\n      \"jumlah_diserahkan\": 10\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{pharmacy_url}}/pesanan-resep/{{pesanan_farmasi_id}}/penyerahan",
+              "host": ["{{pharmacy_url}}"],
+              "path": ["pesanan-resep", "{{pesanan_farmasi_id}}", "penyerahan"]
+            },
+            "description": "Setelah berhasil, Pharmacy mengurangi stok dan memanggil PATCH Hospital /resep/{resep_id}/status dengan status diserahkan."
+          }
+        },
+        {
+          "name": "Cek Stok Setelah Penyerahan",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{pharmacy_url}}/obat/{{obat_id}}/stok",
+              "host": ["{{pharmacy_url}}"],
+              "path": ["obat", "{{obat_id}}", "stok"]
+            },
+            "description": "Stok seharusnya berkurang sesuai jumlah obat yang diserahkan."
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Hospital Menerima Status Pharmacy",
+      "description": "Verifikasi bahwa Hospital menerima status akhir setelah Pharmacy menyerahkan obat.",
+      "item": [
+        {
+          "name": "Cek Status Resep di Hospital",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{hospital_url}}/resep/{{resep_id}}",
+              "host": ["{{hospital_url}}"],
+              "path": ["resep", "{{resep_id}}"]
+            },
+            "description": "Field status seharusnya berubah menjadi diserahkan setelah proses Pharmacy selesai."
+          }
+        },
+        {
+          "name": "Simulasi Update Status Manual (Opsional)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "manual-status-{{resep_id}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"diserahkan\"\n}"
+            },
+            "url": {
+              "raw": "{{hospital_url}}/resep/{{resep_id}}/status",
+              "host": ["{{hospital_url}}"],
+              "path": ["resep", "{{resep_id}}", "status"]
+            },
+            "description": "Hanya untuk simulasi langsung endpoint callback. Tidak perlu dijalankan jika penyerahan Pharmacy berhasil, karena callback sudah dilakukan otomatis."
+          }
+        }
+      ]
+    }
+  ]
+}

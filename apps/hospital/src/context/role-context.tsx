@@ -48,7 +48,7 @@ export const ROLE_PROFILES: Record<UserRole, RoleProfile> = {
       'Tidak berhak mengubah diagnosis medis dokter (PRD 5.1)',
       'Tidak berhak menyerahkan obat ke pasien (PRD 5.1)',
     ],
-    allowedPaths: ['/dashboard', '/dokter', '/pasien', '/log-audit'],
+    allowedPaths: ['/dashboard', '/pengguna', '/dokter', '/pasien', '/log-audit'],
   },
   petugas_pendaftaran: {
     role: 'petugas_pendaftaran',
@@ -70,8 +70,8 @@ export const ROLE_PROFILES: Record<UserRole, RoleProfile> = {
       'Pantau antrean tunggu pasien',
     ],
     larangan: [
-      'Tidak berhak mengisi rekam medis atau diagnosis (PRD 5.2)',
-      'Tidak berhak menerbitkan resep obat medis (PRD 5.2)',
+      'Tidak berhak mengisi rekam medis atau diagnosis ',
+      'Tidak berhak menerbitkan resep obat medis ',
     ],
     allowedPaths: ['/dashboard', '/pasien', '/kunjungan'],
   },
@@ -109,6 +109,8 @@ interface RoleContextType {
   loading: boolean
   logout: () => Promise<void>
   hasAccess: (path: string) => boolean
+  mobileNavOpen: boolean
+  setMobileNavOpen: (open: boolean) => void
 }
 
 const RoleContext = createContext<RoleContextType | undefined>(undefined)
@@ -118,6 +120,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
   const [role, setRoleState] = useState<UserRole>('dokter')
   const [user, setUser] = useState<UserSession | null>(null)
   const [loading, setLoading] = useState(true)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   useEffect(() => {
     async function checkAuthSession() {
@@ -167,7 +170,18 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <RoleContext.Provider value={{ role, user, profile, loading, logout, hasAccess }}>
+    <RoleContext.Provider
+      value={{
+        role,
+        user,
+        profile,
+        loading,
+        logout,
+        hasAccess,
+        mobileNavOpen,
+        setMobileNavOpen,
+      }}
+    >
       {children}
     </RoleContext.Provider>
   )

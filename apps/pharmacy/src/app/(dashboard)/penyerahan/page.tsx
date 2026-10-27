@@ -18,6 +18,19 @@ interface ItemResep {
 interface PesananDetail {
   id: string
   resep_rumah_sakit_id: string
+  pasien: {
+    nama_lengkap: string | null
+    nomor_rekam_medis: string | null
+    tanggal_lahir: string | null
+    jenis_kelamin: string | null
+  }
+  dokter: {
+    nama_lengkap: string | null
+    spesialisasi: string | null
+  }
+  diagnosis: string | null
+  catatan_klinis: string | null
+  diterbitkan_pada: string | null
   status: string
   diterima_pada: string
   items: ItemResep[]
@@ -138,6 +151,20 @@ function PenyerahanContent() {
               <span className="px-3 py-1 rounded-full text-xs font-bold border capitalize bg-emerald-50 text-emerald-800 border-emerald-200">
                 {pesanan.status}
               </span>
+            </div>
+
+            <div className="border-b border-slate-100 pb-4 space-y-2">
+              <h3 className="text-sm font-bold text-slate-900">Identitas & Informasi Klinis</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                <p><span className="text-slate-500">Pasien: </span><span className="font-semibold">{pesanan.pasien.nama_lengkap || 'Tidak tersedia'}</span></p>
+                <p><span className="text-slate-500">No. RM: </span><span className="font-semibold">{pesanan.pasien.nomor_rekam_medis || 'Tidak tersedia'}</span></p>
+                <p><span className="text-slate-500">Tanggal lahir: </span><span className="font-semibold">{pesanan.pasien.tanggal_lahir ? new Date(pesanan.pasien.tanggal_lahir).toLocaleDateString('id-ID') : 'Tidak tersedia'}</span></p>
+                <p><span className="text-slate-500">Dokter: </span><span className="font-semibold">{pesanan.dokter.nama_lengkap || 'Tidak tersedia'}</span></p>
+                <p><span className="text-slate-500">Spesialisasi: </span><span className="font-semibold">{pesanan.dokter.spesialisasi || 'Tidak tersedia'}</span></p>
+                <p><span className="text-slate-500">Jenis kelamin: </span><span className="font-semibold">{pesanan.pasien.jenis_kelamin || 'Tidak tersedia'}</span></p>
+              </div>
+              <p className="text-xs"><span className="text-slate-500">Diagnosis: </span><span className="font-semibold">{pesanan.diagnosis || 'Tidak dicantumkan'}</span></p>
+              {pesanan.catatan_klinis && <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-line"><span className="font-semibold text-slate-700">Catatan dokter: </span>{pesanan.catatan_klinis}</p>}
             </div>
 
             {error && (

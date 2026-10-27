@@ -1,6 +1,8 @@
 import { PharmacyHeader } from '@/components/layout/header'
 import { prisma } from '@/lib/prisma'
-import { Boxes, Search, Plus, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { Boxes, Search, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { StockAction } from '@/components/layout/stock-action'
+import { MedicineForm } from '@/components/layout/medicine-form'
 
 export default async function ObatPage({
   searchParams,
@@ -58,13 +60,10 @@ export default async function ObatPage({
             />
           </form>
 
-          <button
-            type="button"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 shadow-sm shadow-emerald-500/20 transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            Tambah Obat Baru
-          </button>
+          <div className="flex w-full items-center justify-between gap-3 sm:w-auto">
+            <p className="text-xs text-slate-500">Pengelola Farmasi dapat menambah jenis obat dan stok.</p>
+            <MedicineForm />
+          </div>
         </div>
 
         {/* Medicines Table */}
@@ -80,12 +79,13 @@ export default async function ObatPage({
                   <th className="py-4 px-6">Stok Saat Ini</th>
                   <th className="py-4 px-6">Batas Min.</th>
                   <th className="py-4 px-6">Status Stok</th>
+                  <th className="py-4 px-6">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {daftarObat.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center text-slate-400">
+                    <td colSpan={8} className="py-12 text-center text-slate-400">
                       <Boxes className="h-8 w-8 mx-auto mb-2 text-slate-300" />
                       Tidak ada master obat yang ditemukan.
                     </td>
@@ -129,6 +129,9 @@ export default async function ObatPage({
                               Stok Aman
                             </span>
                           )}
+                        </td>
+                        <td className="py-4 px-6">
+                          <StockAction obatId={obat.id} namaObat={obat.namaObat} satuan={obat.satuan} />
                         </td>
                       </tr>
                     )

@@ -1,12 +1,22 @@
 import Link from 'next/link'
 import { PharmacyHeader } from '@/components/layout/header'
 import { prisma } from '@/lib/prisma'
+import { getHospitalResep } from '@/lib/integrations/hospital'
 import { ArrowDownToLine, PackageCheck, AlertCircle } from 'lucide-react'
 
 export default async function PesananResepPage() {
   let daftarPesanan: Array<{
     id: string
     resepRumahSakitId: string
+    namaPasien: string | null
+    nomorRekamMedis: string | null
+    tanggalLahirPasien: Date | null
+    jenisKelaminPasien: string | null
+    namaDokter: string | null
+    spesialisasiDokter: string | null
+    diagnosis: string | null
+    catatanKlinis: string | null
+    diterbitkanPada: Date | null
     status: string
     diterimaPada: Date
     detailPesananResep: Array<{
@@ -40,6 +50,30 @@ export default async function PesananResepPage() {
     console.warn('Gagal query pesanan resep:', error)
   }
 
+  const pesananDenganDataHospital = await Promise.all(
+    daftarPesanan.map(async (pesanan) => {
+      try {
+        const resep = await getHospitalResep(pesanan.resepRumahSakitId)
+        const pemeriksaan = resep.kunjungan?.pemeriksaan?.[0]
+        return {
+          ...pesanan,
+          namaPasien: resep.pasien?.namaLengkap ?? pesanan.namaPasien,
+          nomorRekamMedis: resep.pasien?.nomorRekamMedis ?? pesanan.nomorRekamMedis,
+          tanggalLahirPasien: resep.pasien?.tanggalLahir ?? pesanan.tanggalLahirPasien,
+          jenisKelaminPasien: resep.pasien?.jenisKelamin ?? pesanan.jenisKelaminPasien,
+          namaDokter: resep.dokter?.namaLengkap ?? pesanan.namaDokter,
+          spesialisasiDokter: resep.dokter?.spesialisasi ?? pesanan.spesialisasiDokter,
+          diagnosis: pemeriksaan?.diagnosis ?? pesanan.diagnosis,
+          catatanKlinis: pemeriksaan?.catatan ?? pesanan.catatanKlinis,
+          diterbitkanPada: resep.diterbitkanPada ?? pesanan.diterbitkanPada,
+        }
+      } catch (error) {
+        console.warn(`Gagal mengambil resep ${pesanan.resepRumahSakitId} dari Hospital:`, error)
+        return pesanan
+      }
+    })
+  )
+
   return (
     <div className="flex-1 flex flex-col">
       <PharmacyHeader title="Pesanan Resep Masuk dari Rumah Sakit" />
@@ -53,19 +87,19 @@ export default async function PesananResepPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {daftarPesanan.length === 0 ? (
+          {pesananDenganDataHospital.length === 0 ? (
             <div className="col-span-2 bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400">
               <ArrowDownToLine className="h-8 w-8 mx-auto mb-2 text-slate-300" />
               Belum ada pesanan resep masuk dari Rumah Sakit.
             </div>
           ) : (
-            daftarPesanan.map((p) => (
+            pesananDenganDataHospital.map((p) => (
               <div key={p.id} className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
                 <div className="flex items-start justify-between">
                   <div>
-                    <span className="text-xs font-mono text-slate-400 block">Pesanan: {p.id.slice(0, 8)}...</span>
+                    <span className="text-xs font-mono text-slate-400 block break-all">ID Pesanan Farmasi: {p.id}</span>
                     <h3 className="font-bold text-base text-slate-900 mt-0.5">
-                      Resep RS: <span className="font-mono text-emerald-700">{p.resepRumahSakitId.slice(0, 8)}...</span>
+                      Resep RS: <span className="font-mono text-emerald-700 break-all">{p.resepRumahSakitId}</span>
                     </h3>
                     <p className="text-xs text-slate-500">
                       Diterima: {new Date(p.diterimaPada).toLocaleDateString('id-ID', {
@@ -80,6 +114,50 @@ export default async function PesananResepPage() {
                   <span className="px-3 py-1 rounded-full text-xs font-bold border capitalize bg-emerald-50 text-emerald-800 border-emerald-200">
                     {p.status}
                   </span>
+                </div>
+
+                <div className="border-t border-slate-100 pt-3 space-y-2">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
+                    Identitas & Informasi Klinis
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-slate-500">Pasien: </span>
+                      <span className="font-semibold text-slate-800">{p.namaPasien || 'Tidak tersedia'}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500">No. RM: </span>
+                      <span className="font-semibold text-slate-800">{p.nomorRekamMedis || 'Tidak tersedia'}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500">Tanggal lahir: </span>
+                      <span className="font-semibold text-slate-800">
+                        {p.tanggalLahirPasien ? new Date(p.tanggalLahirPasien).toLocaleDateString('id-ID') : 'Tidak tersedia'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500">Dokter: </span>
+                      <span className="font-semibold text-slate-800">{p.namaDokter || 'Tidak tersedia'}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500">Jenis kelamin: </span>
+                      <span className="font-semibold text-slate-800">{p.jenisKelaminPasien || 'Tidak tersedia'}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500">Spesialisasi: </span>
+                      <span className="font-semibold text-slate-800">{p.spesialisasiDokter || 'Tidak tersedia'}</span>
+                    </div>
+                  </div>
+                  <div className="text-xs">
+                    <span className="text-slate-500">Diagnosis: </span>
+                    <span className="font-semibold text-slate-800">{p.diagnosis || 'Tidak dicantumkan'}</span>
+                  </div>
+                  {p.catatanKlinis && (
+                    <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-line">
+                      <span className="font-semibold text-slate-700">Catatan dokter: </span>
+                      {p.catatanKlinis}
+                    </p>
+                  )}
                 </div>
 
                 <div className="border-t border-slate-100 pt-3">

@@ -10,6 +10,8 @@ datasource db {
 
 model ProfilPengguna {
   id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email          String?   @unique
+  kataSandi      String?   @map("kata_sandi")
   namaLengkap    String    @map("nama_lengkap")
   peran          String    @map("peran")
   dibuatPada     DateTime  @default(now()) @map("dibuat_pada") @db.Timestamptz
@@ -39,6 +41,15 @@ model Obat {
 model PesananResep {
   id                   String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   resepRumahSakitId    String                 @unique @map("resep_rumah_sakit_id") @db.Uuid
+  namaPasien            String?                @map("nama_pasien")
+  nomorRekamMedis       String?                @map("nomor_rekam_medis")
+  tanggalLahirPasien    DateTime?              @map("tanggal_lahir_pasien") @db.Date
+  jenisKelaminPasien    String?                @map("jenis_kelamin_pasien")
+  namaDokter            String?                @map("nama_dokter")
+  spesialisasiDokter    String?                @map("spesialisasi_dokter")
+  diagnosis             String?
+  catatanKlinis         String?                @map("catatan_klinis")
+  diterbitkanPada       DateTime?              @map("diterbitkan_pada") @db.Timestamptz
   status               String                 @default("diterima") @map("status")
   diterimaPada         DateTime               @default(now()) @map("diterima_pada") @db.Timestamptz
   dibuatPada           DateTime               @default(now()) @map("dibuat_pada") @db.Timestamptz

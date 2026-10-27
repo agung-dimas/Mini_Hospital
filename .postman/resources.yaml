@@ -1,0 +1,9 @@
+# Use this workspace to collaborate
+workspace:
+  id: ""
+
+localResources:
+  collections:
+    - ../docs/mini-hospital.postman_collection.json
+  environments:
+    - ../docs/mini-hospital-local.postman_environment.json

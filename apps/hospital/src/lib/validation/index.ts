@@ -5,7 +5,8 @@ export const pasienSchema = z.object({
   nama_lengkap: z.string().min(1, 'Nama lengkap wajib diisi'),
   tanggal_lahir: z.string().min(1, 'Tanggal lahir wajib diisi'),
   jenis_kelamin: z.enum(['laki-laki', 'perempuan']),
-  alamat: z.string().optional(),
+  nomor_telepon: z.string().optional().nullable(),
+  alamat: z.string().optional().nullable(),
 })
 
 export const kunjunganSchema = z.object({
@@ -15,7 +16,12 @@ export const kunjunganSchema = z.object({
 })
 
 export const detailResepItemSchema = z.object({
-  obat_id: z.string().uuid('ID obat tidak valid'),
+  obat_id: z
+    .string()
+    .regex(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+      'ID obat tidak valid'
+    ),
   nama_obat_saat_resep: z.string().min(1, 'Nama obat wajib diisi'),
   jumlah: z.number().int().positive('Jumlah obat harus lebih besar dari 0'),
   instruksi_penggunaan: z.string().min(1, 'Instruksi penggunaan wajib diisi'),

@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
             OR: [
               { namaLengkap: { contains: cari, mode: 'insensitive' } },
               { nomorRekamMedis: { contains: cari, mode: 'insensitive' } },
+              { nomorTelepon: { contains: cari, mode: 'insensitive' } },
             ],
           }
         : undefined,
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
       return jsonError('Validasi data pasien gagal', 422, validasi.error.flatten().fieldErrors)
     }
 
-    const { nomor_rekam_medis, nama_lengkap, tanggal_lahir, jenis_kelamin, alamat } = validasi.data
+    const { nomor_rekam_medis, nama_lengkap, tanggal_lahir, jenis_kelamin, nomor_telepon, alamat } = validasi.data
 
     const duplikat = await prisma.pasien.findUnique({
       where: { nomorRekamMedis: nomor_rekam_medis },
@@ -54,13 +55,14 @@ export async function POST(request: NextRequest) {
         namaLengkap: nama_lengkap,
         tanggalLahir: new Date(tanggal_lahir),
         jenisKelamin: jenis_kelamin,
-        alamat,
+        nomorTelepon: nomor_telepon || null,
+        alamat: alamat || null,
       },
     })
 
     return jsonSuccess(pasienBaru, 'Pasien baru berhasil didaftarkan', 201)
   } catch (error) {
     console.error('Error POST /api/v1/pasien:', error)
-    return jsonError('Gagal mendaftarkan pasien', 500)
+    return jsonError(error instanceof Error ? error.message : 'Gagal mendaftarkan pasien', 500)
   }
 }

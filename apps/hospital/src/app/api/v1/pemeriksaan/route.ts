@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
       await tx.kunjungan.update({
         where: { id: kunjungan_id },
-        data: { status: 'sedang_diperiksa' },
+        data: { status: 'selesai' },
       })
 
       return pemeriksaan

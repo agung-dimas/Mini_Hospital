@@ -25,10 +25,25 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { resep_rumah_sakit_id, items } = body
+    const {
+      resep_rumah_sakit_id,
+      pasien,
+      dokter,
+      diagnosis,
+      catatan_klinis,
+      diterbitkan_pada,
+      items,
+    } = body
 
-    if (!resep_rumah_sakit_id || !Array.isArray(items) || items.length === 0) {
-      return jsonError('ID resep rumah sakit dan daftar item obat wajib disertakan', 422)
+    if (
+      !resep_rumah_sakit_id ||
+      !pasien?.nama_lengkap ||
+      !pasien?.nomor_rekam_medis ||
+      !dokter?.nama_lengkap ||
+      !Array.isArray(items) ||
+      items.length === 0
+    ) {
+      return jsonError('Identitas pasien, dokter, ID resep, dan daftar item obat wajib disertakan', 422)
     }
 
     // Mencegah penerimaan resep ganda
@@ -44,6 +59,15 @@ export async function POST(request: NextRequest) {
       const pesanan = await tx.pesananResep.create({
         data: {
           resepRumahSakitId: resep_rumah_sakit_id,
+          namaPasien: pasien.nama_lengkap,
+          nomorRekamMedis: pasien.nomor_rekam_medis,
+          tanggalLahirPasien: pasien.tanggal_lahir ? new Date(pasien.tanggal_lahir) : null,
+          jenisKelaminPasien: pasien.jenis_kelamin || null,
+          namaDokter: dokter.nama_lengkap,
+          spesialisasiDokter: dokter.spesialisasi || null,
+          diagnosis: diagnosis || null,
+          catatanKlinis: catatan_klinis || null,
+          diterbitkanPada: diterbitkan_pada ? new Date(diterbitkan_pada) : null,
           status: 'diterima',
           detailPesananResep: {
             create: items.map((item: {
